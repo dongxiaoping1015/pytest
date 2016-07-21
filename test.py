@@ -902,3 +902,247 @@ import os.path
 # print ('reply is: ',reply)
 #
 # s.close()
+
+# 15.2 基于TCP socket的HTTP服务器
+
+#现在，我们写出一个HTTP服务器端：
+
+# import socket
+#
+# # Address
+# HOST = ''
+# PORT = 8003
+#
+# # Prepare HTTP response
+# text_content = '''HTTP/1.x 200 OK
+# Content-Type: text/html
+#
+# <head>
+# <title>WOW</title>
+# </head>
+# <html>
+# <p>Wow, Python Server</p>
+# <IMG src="test.jpg"/>
+# </html>
+# '''
+#
+# # Read picture, put into HTTP format
+# f = open('test.jpg','rb')
+# pic_content = '''
+# HTTP/1.x 200 OK
+# Content-Type: image/jpg
+#
+# '''
+# pic_content = pic_content + f.read()
+# f.close()
+#
+# # Configure socket
+# s    = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.bind((HOST, PORT))
+#
+# # infinite loop, server forever
+# while True:
+#     # 3: maximum number of requests waiting
+#     s.listen(3)
+#     conn, addr = s.accept()
+#     request    = conn.recv(1024)
+#     method    = request.split(' ')[0]
+#     src            = request.split(' ')[1]
+#
+#     # deal with GET method
+#     if method == 'GET':
+#         # ULR
+#         if src == '/test.jpg':
+#             content = pic_content
+#         else: content = text_content
+#
+#         print 'Connected by', addr
+#         print 'Request is:', request
+#         conn.sendall(content)
+#     # close connection
+#     conn.close()
+
+# 16.Python服务器进化
+
+# 16.1 支持POST
+'''首先增加该服务器的功能。
+这里增添了表格，以及处理表格提交数据的"POST"方法。
+你会发现这里只是比刚才用socket写的Python服务器增加很少的一点内容。'''
+
+# A messy HTTP server based on TCP socket
+
+# import socket
+#
+# # Address
+# HOST = ''
+# PORT = 8004
+#
+# text_content = '''
+# HTTP/1.x 200 OK
+# Content-Type: text/html
+#
+# <head>
+# <title>WOW</title>
+# </head>
+# <html>
+# <p>Wow, Python Server</p>
+# <IMG src="test.jpg"/>
+# <form name="input" action="/" method="post">
+# First name:<input type="text" name="firstname"><br>
+# <input type="submit" value="Submit">
+# </form>
+# </html>
+# '''
+#
+# f = open('test.jpg','rb')
+# pic_content = '''
+# HTTP/1.x 200 OK
+# Content-Type: image/jpg
+#
+# '''
+# pic_content = pic_content + f.read()
+#
+# # Configure socket
+# s    = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.bind((HOST, PORT))
+#
+# # Serve forever
+# while True:
+#     s.listen(3)
+#     conn, addr = s.accept()
+#     request    = conn.recv(1024)         # 1024 is the receiving buffer size
+#     method     = request.split(' ')[0]
+#     src        = request.split(' ')[1]
+#
+#     print 'Connected by', addr
+#     print 'Request is:', request
+#
+#     # if GET method request
+#     if method == 'GET':
+#         # if ULR is /test.jpg
+#         if src == '/test.jpg':
+#             content = pic_content
+#         else: content = text_content
+#         # send message
+#         conn.sendall(content)
+#     # if POST method request
+#     if method == 'POST':
+#         form = request.split('\r\n')
+#         idx = form.index('')             # Find the empty line
+#         entry = form[idx:]               # Main content of the request
+#
+#         value = entry[-1].split('=')[-1]
+#         conn.sendall(text_content + '\n <p>' + value + '</p>')
+#         ######
+#         # More operations, such as put the form into database
+#         # ...
+#         ######
+#     # close connection
+#     conn.close()
+
+# 16.2 使用SocketServer
+'''首先使用SocketServer包来方便的架设服务器。
+在上面使用socket的过程中，我们先设置了socket的类型，
+然后依次调用bind(),listen(),accept()，
+最后使用while循环来让服务器不断的接受请求。'''
+
+# import SocketServer
+#
+# HOST = ''
+# PORT = 8005
+#
+# text_content = '''
+# HTTP/1.x 200 OK
+# Content-Type: text/html
+#
+# <head>
+# <title>WOW</title>
+# </head>
+# <html>
+# <p>Wow, Python Server</p>
+# <IMG src="test.jpg"/>
+# <form name="input" action="/" method="post">
+# First name:<input type="text" name="firstname"><br>
+# <input type="submit" value="Submit">
+# </form>
+# </html>
+# '''
+#
+# f = open('test.jpg','rb')
+# pic_content = '''
+# HTTP/1.x 200 OK
+# Content-Type: image/jpg
+#
+# '''
+# pic_content = pic_content + f.read()
+#
+# # This class defines response to each request
+# class MyTCPHandler(SocketServer.BaseRequestHandler):
+#     def handle(self):
+#         # self.request is the TCP socket connected to the client
+#         request = self.request.recv(1024)
+#
+#         print 'Connected by',self.client_address[0]
+#         print 'Request is', request
+#
+#         method     = request.split(' ')[0]
+#         src        = request.split(' ')[1]
+#
+#         if method == 'GET':
+#             if src == '/test.jpg':
+#                 content = pic_content
+#             else: content = text_content
+#             self.request.sendall(content)
+#
+#         if method == 'POST':
+#             form = request.split('\r\n')
+#             idx = form.index('')             # Find the empty line
+#             entry = form[idx:]               # Main content of the request
+#
+#             value = entry[-1].split('=')[-1]
+#             self.request.sendall(text_content + '\n <p>' + value + '</p>')
+#             ######
+#             # More operations, such as put the form into database
+#             # ...
+#             ######
+#
+#
+# # Create the server
+# server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
+# # Start the server, and work forever
+# server.serve_forever()
+
+# 16.3 SimpleHTTPServer: 使用静态文件来回应请求
+
+# import SocketServer
+# import  SimpleHTTPServer
+#
+# HOST = ''
+# PORT = 8006
+#
+# server = SocketServer.TCPServer((HOST, PORT), SimpleHTTPServer.SimpleHTTPRequestHandler)
+#
+# server.serve_forever()
+
+# 16.4 CGIHTTPServer：使用静态文件或者CGI来回应请求
+
+# CGIHTTPServer:
+
+# Written by Vamei
+# A messy HTTP server based on TCP socket
+
+# import BaseHTTPServer
+# import CGIHTTPServer
+#
+# HOST = ''
+# PORT = 8008
+#
+# # Create the server, CGIHTTPRequestHandler is pre-defined handler
+# server = BaseHTTPServer.HTTPServer((HOST, PORT), CGIHTTPServer.CGIHTTPRequestHandler)
+# # Start the server
+# server.serve_forever()
+
+# 17 Django
+
+# import django
+# print (django.VERSION)
