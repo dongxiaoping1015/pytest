@@ -1,3 +1,4 @@
+#coding:utf8
 # s = 'abcdefghijklmn'
 #
 # for(index,char) in enumerate(s):
@@ -110,8 +111,6 @@
 # print(add(2))
 # a = map(add, [2,4,5])
 # print (a)
-
-#上下文管理器 一旦进入或离开适用范围，会有特殊操作被调用（如对象分配或释放内存）
 
 # f = open("new.txt", 'w')
 # print(f.closed)
@@ -777,4 +776,129 @@ import os.path
 # izip()                          # 类似于zip()函数，只是返回的是一个循环器。
 
 # 14. 数据库 (sqlite3)
+# 14.1 创建数据库
+# import  sqlite3
+#
+# conn = sqlite3.connect("test.db")
+#
+# c = conn.cursor()
+#
+# c.execute('''CREATE TABLE categoty
+#         (id int primary key, sort int, name text)''')
+#
+# c.execute('''CREATE TABLE book
+# (id int primary key,
+# sort int,
+# name text,
+# price real,
+# category int,
+# FOREIGN KEY (category) REFERENCES category(id))''')
+#
+# conn.commit()
+# conn.close()
 
+# 14.2 插入数据
+
+# import sqlite3
+#
+# conn = sqlite3.connect("test.db")
+# c = conn.cursor()
+#
+# books = [(1,1,'Cook Recipe',3.12,1),
+#          (2,3,'Python Intro',17.5,2),
+#          (3,2,'OS Intro',13.6,2)]
+#
+# c.execute("INSERT INTO categoty VALUES (1,1, 'kitchen')")
+#
+# c.execute("INSERT INTO categoty VALUES (?,?,?)", (2,2,'computer'))
+#
+# c.execute('INSERT INTO book VALUES (?,?,?,?,?)', books)   #出现错误
+#
+# conn.commit()
+# conn.close()
+
+# 14.3 查询
+
+# import sqlite3
+#
+# conn = sqlite3.connect('test.db')
+# c = conn.cursor()
+#
+# c.execute('SELECT name FROM categoty ORDER BY sort')
+# print(c.fetchone())
+# print(c.fetchone())
+#
+# c.execute('SELECT * FROM book WHERE book.category=1')
+# print(c.fetchall())
+#
+# for row in c.execute('SELECT name, price FROM book ORDER BY sort'):
+#     print(row)
+
+# 14.4 更新与删除
+
+# conn = sqlite3.connect("test.db")
+# c = conn.cursor()
+#
+# c.execute('UPDATE book SET price=? WHERE id=?',(1000,1))
+# c.execute('DELETE FROM book WHERE id=2')
+#
+# conn.commit()
+# conn.close()
+
+# 15 原始Python服务器
+
+# 15.1 TCP socket
+
+'''首先是服务器端，我们使用bind()方法
+来赋予socket以固定的地址和端口，
+并使用listen()方法来被动的监听该端口。
+当有客户尝试用connect()方法连接的时候，
+服务器使用accept()接受连接，
+从而建立一个连接的socket：'''
+
+# import socket
+#
+# HOST = ''
+# PORT = 8000
+#
+# reply = 'Yes'
+#
+# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.bind((HOST, PORT))
+# s.listen(3)
+#
+# conn, addr = s.accept()
+# request = conn.recv(1024)
+#
+# print('request is: ',request)
+# print('Connedted by',addr)
+#
+# conn.sendall(reply)
+
+# conn.close()
+'''首先是服务器端，
+我们使用bind()方法来赋予socket以固定的地址和端口，
+并使用listen()方法来被动的监听该端口。
+当有客户尝试用connect()方法连接的时候
+，服务器使用accept()接受连接，
+从而建立一个连接的socket：'''
+
+'''然后用另一台电脑作为客户，
+我们主动使用connect()方法来搜索服务器端的IP地址
+(在Linux中，你可以用$ifconfig来查询自己的IP地址)
+和端口，以便客户可以找到服务器，并建立连接:'''
+
+# import  socket
+#
+# HOST = '127.0.0.1'
+# PORT = 8000
+#
+# request = 'can you hear me?'
+#
+# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# s.connect((HOST, PORT))
+# s.sendall(request)
+# reply = s.recv(1024)
+# print ('reply is: ',reply)
+#
+# s.close()
