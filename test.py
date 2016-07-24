@@ -1144,5 +1144,5 @@ import os.path
 
 # 17 Django
 
-# import django
-# print (django.VERSION)
+import django
+print (django.VERSION)
